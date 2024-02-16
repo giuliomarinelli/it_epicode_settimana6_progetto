@@ -34,7 +34,7 @@ public class Employee {
 
     private String profilePictureUrl;
 
-    @OneToMany(mappedBy = "employee")
+    @OneToMany(mappedBy = "employee", fetch = FetchType.EAGER)
     @JsonIgnore
     private List<Device> devices;
 

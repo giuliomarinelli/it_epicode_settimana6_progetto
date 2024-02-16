@@ -4,7 +4,6 @@ import it.epicode.w6d5.devices_management.Models.entities.Device;
 import it.epicode.w6d5.devices_management.Models.entities.Employee;
 import it.epicode.w6d5.devices_management.Models.enums.DeviceType;
 import it.epicode.w6d5.devices_management.Models.reqDTO.DeviceDTO;
-import it.epicode.w6d5.devices_management.Models.reqDTO.EmployeeDTO;
 import it.epicode.w6d5.devices_management.Models.resDTO.DeleteRes;
 import it.epicode.w6d5.devices_management.exceptions.BadRequestException;
 import it.epicode.w6d5.devices_management.exceptions.NotFoundException;
@@ -54,7 +53,7 @@ public class DeviceService {
 
     public Device findById(UUID id) throws NotFoundException {
         return deviceRp.findById(id).orElseThrow(
-                () -> new NotFoundException("device with id='" + id + "' not found")
+                () -> new NotFoundException("device with id = '" + id + "' not found")
         );
     }
 
@@ -66,7 +65,7 @@ public class DeviceService {
 
     public Device update(DeviceDTO deviceDTO, UUID id) throws BadRequestException {
         Device device = deviceRp.findById(id).orElseThrow(
-                () -> new BadRequestException("device with id='" + id + "' doesn't exist. cannot update")
+                () -> new BadRequestException("device with id = '" + id + "' doesn't exist, cannot update")
         );
         if (device.getEmployee() != null) {
             device.setEmployeeId(device.getEmployee().getId());
@@ -82,7 +81,9 @@ public class DeviceService {
             throw new BadRequestException("Malformed 'type' field, allowed exact-match values are SMARTPHONE, TABLET, LAPTOP, DOMOTIC_DEVICE," +
                     " DIGITAL_CAMERA, SMART_CARD, DESKTOP_COMPUTER, TV, OTHERS");
         }
+
         deviceRp.save(device);
+
         if (device.getEmployee() != null) {
             emailSvc.sendEmail(device.getEmployee().getEmail(), "Your resource has been updated successfully",
                     "Hello " + device.getEmployee().getFirstName() +
@@ -94,13 +95,15 @@ public class DeviceService {
         return device;
 
     }
-
+    /* Non essendoci indicazioni specifiche, ho lasciato libera la possibilità di ri-assegnare
+        un dispositivo già assegnato ad un employee ad un altro employee
+     */
     public Device assignDeviceToEmployee(UUID employeeId, UUID deviceId) throws BadRequestException {
         Employee employee = employeeRp.findById(employeeId).orElseThrow(
-                () -> new BadRequestException("employee with id='" + employeeId + "' doesn't exist, cannot assign device to employee")
+                () -> new BadRequestException("employee with id = '" + employeeId + "' doesn't exist, cannot assign device to employee")
         );
         Device device = deviceRp.findById(deviceId).orElseThrow(
-                () -> new BadRequestException("device with id='" + deviceId + "' doesn't exist, cannot assign device to employee")
+                () -> new BadRequestException("device with id = '" + deviceId + "' doesn't exist, cannot assign device to employee")
         );
         device.setEmployee(employee);
         device.setEmployeeId(employeeId);
@@ -119,7 +122,7 @@ public class DeviceService {
 
     public DeleteRes delete(UUID id) throws BadRequestException {
         Device device = deviceRp.findById(id).orElseThrow(
-                () -> new BadRequestException("device with id='" + id + "' doesn't exist, cannot delete")
+                () -> new BadRequestException("device with id = '" + id + "' doesn't exist, cannot delete")
         );
         deviceRp.delete(device);
         if (device.getEmployee() != null) {
@@ -131,7 +134,7 @@ public class DeviceService {
                             "Have a nice day!\n\nAdmin"
             );
         }
-        return new DeleteRes("device with id='" + id + "' has been correctly deleted");
+        return new DeleteRes("device with id = '" + id + "' has been correctly deleted");
     }
 
 

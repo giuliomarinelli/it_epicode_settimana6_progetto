@@ -21,6 +21,9 @@ public class Device {
     @Setter(AccessLevel.NONE)
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
+    private DeviceType type;
+
     @Column(nullable = false)
     private boolean available;
 
@@ -32,9 +35,6 @@ public class Device {
 
     @Column(nullable = false)
     private boolean neglected;
-
-    @Enumerated(EnumType.STRING)
-    private DeviceType type;
 
     @ManyToOne
     @JoinColumn(name = "employee_id")

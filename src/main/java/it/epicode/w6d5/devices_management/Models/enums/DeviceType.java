@@ -7,7 +7,7 @@ public enum DeviceType {
     DOMOTIC_DEVICE,
     DIGITAL_CAMERA,
     SMART_CARD,
-    DESKTOP_CPMPUTER,
+    DESKTOP_COMPUTER,
     TV,
     OTHERS
 }

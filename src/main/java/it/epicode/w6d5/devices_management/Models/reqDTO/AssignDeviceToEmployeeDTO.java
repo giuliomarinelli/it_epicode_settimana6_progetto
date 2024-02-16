@@ -11,7 +11,5 @@ public record AssignDeviceToEmployeeDTO
                 @Pattern(regexp = "^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$",
                         message = "'employeeId' field is malformed since it doesn't respect the Universal Unique ID pattern"
                 )
-
                 String employeeId
-        ) {
-}
+        ) {}

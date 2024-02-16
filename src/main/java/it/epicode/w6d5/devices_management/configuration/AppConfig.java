@@ -14,9 +14,10 @@ import java.util.Properties;
 @PropertySource("application.properties")
 public class AppConfig {
     @Bean
-    public Cloudinary cloudinary(@Value("${cloudinary.name}") String name,
-                                 @Value("${cloudinary.api_key}") String apiKey,
-                                 @Value("${cloudinary.api_secret}") String apiSecret
+    public Cloudinary cloudinary(
+            @Value("${cloudinary.name}") String name,
+            @Value("${cloudinary.api_key}") String apiKey,
+            @Value("${cloudinary.api_secret}") String apiSecret
     ) {
         return new Cloudinary(ObjectUtils.asMap(
                 "cloud_name", name,

@@ -4,7 +4,6 @@ import it.epicode.w6d5.devices_management.Models.entities.Employee;
 import it.epicode.w6d5.devices_management.Models.reqDTO.EmployeeDTO;
 import it.epicode.w6d5.devices_management.Models.resDTO.DeleteRes;
 import it.epicode.w6d5.devices_management.exceptions.BadRequestException;
-import it.epicode.w6d5.devices_management.exceptions.InternalServerErrorException;
 import it.epicode.w6d5.devices_management.exceptions.NotFoundException;
 import it.epicode.w6d5.devices_management.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,28 +29,32 @@ public class EmployeeService {
 
     public Employee findById(UUID id) throws NotFoundException {
         return employeeRp.findById(id).orElseThrow(
-                () -> new NotFoundException("employee with id='" + id + "' not found")
+                () -> new NotFoundException("employee with id = '" + id + "' not found")
         );
     }
 
-    public Employee create(EmployeeDTO employeeDTO) throws BadRequestException, InternalServerErrorException {
+    public Employee create(EmployeeDTO employeeDTO) throws Exception {
         Employee e = new Employee(employeeDTO.username(), employeeDTO.firstName(), employeeDTO.lastName(), employeeDTO.email());
         try {
             employeeRp.save(e);
             emailSvc.sendEmail(e.getEmail(), "Welcome in Devices Management API",
                     "Hello " + e.getFirstName() +
-                            "\n\nYour employee resource creation (id = '" + e.getId() + "' was performed successfully.\n\n" +
+                            "\n\nYour employee resource creation (id = '" + e.getId() + "') was performed successfully.\n\n" +
                             "Thank you for joining!\n\nAdmin"
             );
             return e;
         } catch (DataIntegrityViolationException exception) {
-            throw new BadRequestException("'email' and/or 'username' fields sent already exist. Cannot create");
+            if (employeeRp.getAllEmails().contains(e.getEmail()))
+                throw new BadRequestException("'email' field sent already exists. Cannot create");
+            if (employeeRp.getAllUsernames().contains(e.getUsername()))
+                throw new BadRequestException("'username' field sent already exists. Cannot create");
+            throw new Exception("Data integrity violation. " + exception.getMessage());
         }
     }
 
-    public Employee update(EmployeeDTO employeeDTO, UUID id) throws BadRequestException, InternalServerErrorException {
+    public Employee update(EmployeeDTO employeeDTO, UUID id) throws BadRequestException {
         Employee employee = employeeRp.findById(id).orElseThrow(
-                () -> new BadRequestException("employee with id='" + id + "' doesn't exist. cannot update")
+                () -> new BadRequestException("employee with id = '" + id + "' doesn't exist, cannot update")
         );
         employee.setUsername(employeeDTO.username());
         employee.setFirstName(employeeDTO.firstName());
@@ -66,7 +69,7 @@ public class EmployeeService {
             );
             return employee;
         } catch (DataIntegrityViolationException e) {
-            throw new BadRequestException("'email' and/or 'username' fields sent already exist. Cannot update");
+            throw new BadRequestException("'email' and/or 'username' fields sent already exist, cannot update");
         }
     }
 
@@ -81,23 +84,23 @@ public class EmployeeService {
         return employee;
     }
 
-    public DeleteRes delete(UUID id) throws BadRequestException, InternalServerErrorException {
+    public DeleteRes delete(UUID id) throws BadRequestException {
         Employee employee = employeeRp.findById(id).orElseThrow(
-                () -> new BadRequestException("employee with id='" + id + "' doesn't exist, cannot delete")
+                () -> new BadRequestException("employee with id = '" + id + "' doesn't exist, cannot delete")
         );
         try {
             employeeRp.delete(employee);
             emailSvc.sendEmail(employee.getEmail(), "Your resource has been deleted successfully",
-                    "Hello " + employee.getFirstName() + "" +
+                    "Hello " + employee.getFirstName() +
                             "\n\nYour employee resource deletion (id = '" + id + "') was performed successfully.\n\n" +
                             "Have a nice day!\n\nAdmin"
             );
         } catch (DataIntegrityViolationException e) {
-            throw new BadRequestException("employee you are trying to delete is referenced by one ore more devices," +
+            throw new BadRequestException("employee you are trying to delete is referenced by one or more devices," +
                     " please delete all referencing devices before deleting employee; you can find all devices " +
                     "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
         }
-        return new DeleteRes("employee with id='" + id + "' has been correctly deleted");
+        return new DeleteRes("employee with id = '" + id + "' has been correctly deleted");
     }
 
 
