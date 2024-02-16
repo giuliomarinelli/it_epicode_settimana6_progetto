@@ -5,32 +5,46 @@ import it.epicode.w6d5.devices_management.Models.entities.Employee;
 import it.epicode.w6d5.devices_management.Models.enums.DeviceType;
 import it.epicode.w6d5.devices_management.Models.reqDTO.DeviceDTO;
 import it.epicode.w6d5.devices_management.Models.reqDTO.EmployeeDTO;
+import it.epicode.w6d5.devices_management.Models.resDTO.DeleteRes;
 import it.epicode.w6d5.devices_management.exceptions.BadRequestException;
 import it.epicode.w6d5.devices_management.exceptions.NotFoundException;
 import it.epicode.w6d5.devices_management.repositories.DeviceRepository;
+import it.epicode.w6d5.devices_management.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-
+@Service
 public class DeviceService {
 
     @Autowired
-    DeviceRepository deviceRp;
+    private DeviceRepository deviceRp;
+
+    @Autowired
+    private EmployeeRepository employeeRp;
 
 
     public Page<Device> getAll(Pageable pageable) {
         return deviceRp.findAll(pageable).map(res -> {
-            res.setEmployeeId(res.getEmployee().getId());
+            if (res.getEmployee() != null) {
+                res.setEmployeeId(res.getEmployee().getId());
+            } else {
+                res.setEmployeeId(null);
+            }
             return res;
         });
     }
 
     public Page<Device> getByEmployeeId(Pageable pageable, UUID employeeId) {
         return deviceRp.getByEmployeeId(pageable, employeeId).map(res -> {
-            res.setEmployeeId(res.getEmployee().getId());
+            if (res.getEmployee() != null) {
+                res.setEmployeeId(res.getEmployee().getId());
+            } else {
+                res.setEmployeeId(null);
+            }
             return res;
         });
     }
@@ -51,7 +65,11 @@ public class DeviceService {
         Device device = deviceRp.findById(id).orElseThrow(
                 () -> new BadRequestException("device with id='" + id + "' doesn't exist. cannot update")
         );
-        device.setEmployeeId(device.getEmployee().getId());
+        if (device.getEmployee() != null) {
+            device.setEmployeeId(device.getEmployee().getId());
+        } else {
+            device.setEmployeeId(null);
+        }
         device.setAvailable(deviceDTO.available());
         device.setUnderMaintenance(deviceDTO.underMaintenance());
         device.setNeglected(deviceDTO.neglected());
@@ -65,7 +83,25 @@ public class DeviceService {
 
     }
 
-    public Device assignDeviceToEmployee
+    public Device assignDeviceToEmployee(UUID employeeId, UUID deviceId) throws BadRequestException {
+        Employee employee = employeeRp.findById(employeeId).orElseThrow(
+                () -> new BadRequestException("employee with id='" + employeeId + "' doesn't exist, cannot assign device to employee")
+        );
+        Device device = deviceRp.findById(deviceId).orElseThrow(
+                () -> new BadRequestException("device with id='" + deviceId + "' doesn't exist, cannot assign device to employee")
+        );
+        device.setEmployee(employee);
+        device.setEmployeeId(employeeId);
+        device.setAssigned(true);
+        return deviceRp.save(device);
+    }
+
+    public DeleteRes delete(UUID id) throws BadRequestException {
+        Device device = deviceRp.findById(id).orElseThrow(
+                () -> new BadRequestException("device with id='" + id + "' doesn't exist, cannot delete")
+        );
+        return new DeleteRes("device with id='" + id + "' has been correctly deleted");
+    }
 
 
 }

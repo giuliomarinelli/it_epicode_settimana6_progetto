@@ -6,6 +6,7 @@ import it.epicode.w6d5.devices_management.exceptions.BadRequestException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Entity
 @Data
 @Table(name = "devices")
+@NoArgsConstructor
 public class Device {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

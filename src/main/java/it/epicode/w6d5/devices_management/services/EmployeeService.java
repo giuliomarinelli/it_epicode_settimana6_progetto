@@ -31,7 +31,7 @@ public class EmployeeService {
     }
 
     public Employee create(EmployeeDTO employeeDTO) throws BadRequestException {
-        Employee e = new Employee(employeeDTO.username(), employeeDTO.firstName(), employeeDTO.lastname(), employeeDTO.email());
+        Employee e = new Employee(employeeDTO.username(), employeeDTO.firstName(), employeeDTO.lastName(), employeeDTO.email());
         try {
             return employeeRp.save(e);
         } catch (DataIntegrityViolationException exception) {
@@ -45,7 +45,7 @@ public class EmployeeService {
         );
         employee.setUsername(employeeDTO.username());
         employee.setFirstName(employeeDTO.firstName());
-        employee.setLastName(employeeDTO.lastname());
+        employee.setLastName(employeeDTO.lastName());
         employee.setEmail(employeeDTO.email());
         try {
             return employeeRp.save(employee);
@@ -61,9 +61,15 @@ public class EmployeeService {
 
     public DeleteRes delete(UUID id) throws BadRequestException {
         Employee employee = employeeRp.findById(id).orElseThrow(
-                () -> new BadRequestException("employee with id='" + id + "' doesn't exist. cannot delete")
+                () -> new BadRequestException("employee with id='" + id + "' doesn't exist, cannot delete")
         );
+        try {
         employeeRp.delete(employee);
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("employee you are trying to delete is referenced by one ore more devices," +
+                    " please delete all referencing devices before deleting employee; you can find all devices " +
+                    "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
+        }
         return new DeleteRes("employee with id='" + id + "' has been correctly deleted");
     }
 
