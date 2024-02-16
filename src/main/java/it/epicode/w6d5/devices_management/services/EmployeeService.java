@@ -46,9 +46,9 @@ public class EmployeeService {
             return e;
         } catch (DataIntegrityViolationException exception) {
             if (employeeRp.getAllEmails().contains(e.getEmail()))
-                throw new BadRequestException("'email' field sent already exists. Cannot create");
+                throw new BadRequestException("'email' field sent already exists, cannot create");
             if (employeeRp.getAllUsernames().contains(e.getUsername()))
-                throw new BadRequestException("'username' field sent already exists. Cannot create");
+                throw new BadRequestException("'username' field sent already exists, cannot create");
             throw new InternalServerErrorException("Data integrity violation. " + exception.getMessage());
         }
     }
@@ -70,10 +70,8 @@ public class EmployeeService {
             );
             return employee;
         } catch (DataIntegrityViolationException e) {
-            if (employeeRp.getAllEmails().contains(employee.getEmail()))
-                throw new BadRequestException("'email' field sent already exists. Cannot create");
-            if (employeeRp.getAllUsernames().contains(employee.getUsername()))
-                throw new BadRequestException("'username' field sent already exists. Cannot create");
+            if (employeeRp.getAllEmails().contains(employee.getEmail()) || employeeRp.getAllUsernames().contains(employee.getUsername()))
+                throw new BadRequestException("'email' or 'username' fields sent already exist, cannot update");
             throw new InternalServerErrorException("Data integrity violation. " + e.getMessage());
         }
     }

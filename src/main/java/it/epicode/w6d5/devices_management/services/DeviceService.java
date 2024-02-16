@@ -50,11 +50,27 @@ public class DeviceService {
             return res;
         });
     }
+    public Page<Device> getByAssigned(Pageable pageable, boolean assigned) {
+        return deviceRp.getByAssigned(pageable, assigned).map(res -> {
+            if (res.getEmployee() != null) {
+                res.setEmployeeId(res.getEmployee().getId());
+            } else {
+                res.setEmployeeId(null);
+            }
+            return res;
+        });
+    }
 
     public Device findById(UUID id) throws NotFoundException {
-        return deviceRp.findById(id).orElseThrow(
+        Device device = deviceRp.findById(id).orElseThrow(
                 () -> new NotFoundException("device with id = '" + id + "' not found")
         );
+        if (device.getEmployee() != null) {
+            device.setEmployeeId(device.getEmployee().getId());
+        } else {
+            device.setEmployeeId(null);
+        }
+        return device;
     }
 
     public Device create(DeviceDTO deviceDTO) throws BadRequestException {

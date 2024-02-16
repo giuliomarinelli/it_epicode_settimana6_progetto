@@ -24,6 +24,7 @@ public class AppExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(IOException.class)
+    // Gestisco un'unica eccezione di questo tipo, perciò ometto i controlli che servirebbero a contestualizzare e inquadrare l'errore
     public ResponseEntity<HttpErrorRes> ioExceptionHandler(IOException e) {
         return new ResponseEntity<>(new HttpErrorRes(HttpStatus.SERVICE_UNAVAILABLE,
                 "Service unavailable", "An input/output error with Cloudinary provider occurred" +

@@ -53,7 +53,7 @@ public class EmployeeController {
 
     @PutMapping("/employees/{id}")
     public Employee update(@RequestBody @Validated EmployeeDTO employeeDTO,
-                           @PathVariable UUID id, BindingResult validation) throws BadRequestException, InternalServerErrorException {
+                           BindingResult validation, @PathVariable UUID id) throws BadRequestException, InternalServerErrorException {
         if (validation.hasErrors())
             throw new BadRequestException(ValidationMessages.generateValidationErrorMessage(validation));
         return employeeSvc.update(employeeDTO, id);

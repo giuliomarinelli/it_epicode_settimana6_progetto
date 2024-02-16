@@ -1,6 +1,6 @@
 package it.epicode.w6d5.devices_management.controllers;
 
-import com.cloudinary.Cloudinary;
+
 import it.epicode.w6d5.devices_management.Models.entities.Device;
 import it.epicode.w6d5.devices_management.Models.reqDTO.AssignDeviceToEmployeeDTO;
 import it.epicode.w6d5.devices_management.Models.reqDTO.DeviceDTO;
@@ -25,13 +25,18 @@ public class DeviceController {
     @Autowired
     private DeviceService deviceSvc;
 
-
     @GetMapping("/devices")
-    public Page<Device> getEmployees(Pageable pageable, @RequestParam(required = false) UUID employeeId) {
-        if (employeeId == null || employeeId.toString().trim().isEmpty()) {
-            return deviceSvc.getAll(pageable);
+    public Page<Device> getEmployees(Pageable pageable, @RequestParam(required = false) UUID employeeId,
+                                     @RequestParam(required = false) Boolean assigned) {
+        if ((employeeId != null) ^ (assigned != null)) {
+            if (employeeId != null) {
+                return deviceSvc.getByEmployeeId(pageable, employeeId);
+            } else {
+                return deviceSvc.getByAssigned(pageable, assigned);
+            }
+
         }
-        return deviceSvc.getByEmployeeId(pageable, employeeId);
+        return deviceSvc.getAll(pageable);
     }
 
     @GetMapping("/devices/{id}")
@@ -48,7 +53,7 @@ public class DeviceController {
     }
 
     @PutMapping("/devices/{id}")
-    public Device update(@RequestBody @Validated DeviceDTO deviceDTO, @PathVariable UUID id, BindingResult validation) throws BadRequestException {
+    public Device update(@RequestBody @Validated DeviceDTO deviceDTO, BindingResult validation, @PathVariable UUID id) throws BadRequestException {
         if (validation.hasErrors())
             throw new BadRequestException(ValidationMessages.generateValidationErrorMessage(validation));
         return deviceSvc.update(deviceDTO, id);
@@ -58,8 +63,8 @@ public class DeviceController {
         altrimenti andrebbe usato il metodo get che però è incoerente con il tipo di operazione
      */
     @PatchMapping("/devices/{id}/assign-employee")
-    public Device assignDevicetoEmployee(@RequestBody @Validated AssignDeviceToEmployeeDTO assignDeviceToEmployeeDTO,
-                                         @PathVariable UUID id, BindingResult validation) throws BadRequestException {
+    public Device assignDeviceToEmployee(@RequestBody @Validated AssignDeviceToEmployeeDTO assignDeviceToEmployeeDTO,
+                                         BindingResult validation, @PathVariable UUID id) throws BadRequestException {
         if (validation.hasErrors())
             throw new BadRequestException(ValidationMessages.generateValidationErrorMessage(validation));
         try {

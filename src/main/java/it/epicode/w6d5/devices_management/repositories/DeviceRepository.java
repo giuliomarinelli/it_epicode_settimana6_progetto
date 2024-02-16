@@ -13,4 +13,6 @@ import java.util.UUID;
 public interface DeviceRepository extends JpaRepository<Device, UUID>, PagingAndSortingRepository<Device, UUID> {
     @Query("SELECT d FROM Device d WHERE d.employee.id = :employeeId")
     public Page<Device> getByEmployeeId(Pageable pageable, UUID employeeId);
+
+    public Page<Device> getByAssigned(Pageable pageable, boolean assigned);
 }
