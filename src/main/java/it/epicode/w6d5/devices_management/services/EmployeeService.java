@@ -21,6 +21,8 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepository employeeRp;
 
+    @Autowired
+    private EmailService emailSvc;
 
     public Page<Employee> getAll(Pageable pageable) {
         return employeeRp.findAll(pageable);
@@ -35,13 +37,15 @@ public class EmployeeService {
     public Employee create(EmployeeDTO employeeDTO) throws BadRequestException, InternalServerErrorException {
         Employee e = new Employee(employeeDTO.username(), employeeDTO.firstName(), employeeDTO.lastName(), employeeDTO.email());
         try {
-            return employeeRp.save(e);
+            employeeRp.save(e);
+            emailSvc.sendEmail(e.getEmail(), "Welcome in Devices Management API",
+                    "Hello " + e.getFirstName() +
+                            "\n\nYour employee resource creation (id = '" + e.getId() + "' was performed successfully.\n\n" +
+                            "Thank you for joining!\n\nAdmin"
+            );
+            return e;
         } catch (DataIntegrityViolationException exception) {
-            if (exception.getMessage().contains("uk_j9xgmd0ya5jmus09o0b8pqrpb") || exception.getMessage().contains("email"))
-                throw new BadRequestException("'email' field sent already exists. Cannot create");
-            else if (exception.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || exception.getMessage().contains("username"))
-                throw new BadRequestException("'username' field sent already exists. Cannot create");
-            throw new InternalServerErrorException("A non-specific factor causes a violation of data integrity. Cannot create");
+            throw new BadRequestException("'email' and/or 'username' fields sent already exist. Cannot create");
         }
     }
 
@@ -54,19 +58,27 @@ public class EmployeeService {
         employee.setLastName(employeeDTO.lastName());
         employee.setEmail(employeeDTO.email());
         try {
-            return employeeRp.save(employee);
+            employeeRp.save(employee);
+            emailSvc.sendEmail(employee.getEmail(), "Your resource has been updated successfully",
+                    "Hello " + employee.getFirstName() +
+                            "\n\nYour employee resource update (id = '" + id + "') was performed successfully.\n\n" +
+                            "Have a nice day!\n\nAdmin"
+            );
+            return employee;
         } catch (DataIntegrityViolationException e) {
-            if (e.getMessage().contains("uk_j9xgmd0ya5jmus09o0b8pqrpb") || e.getMessage().contains("email"))
-                throw new BadRequestException("'email' field sent already exists. Cannot update");
-            else if (e.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || e.getMessage().contains("username"))
-                throw new BadRequestException("'username' field sent already exists. Cannot update");
-            throw new InternalServerErrorException("A non-specific factor causes a violation of data integrity. Cannot update");
+            throw new BadRequestException("'email' and/or 'username' fields sent already exist. Cannot update");
         }
     }
 
     public Employee updateAfterUpload(Employee employee, String url) {
         employee.setProfilePictureUrl(url);
-        return employeeRp.save(employee);
+        employeeRp.save(employee);
+        emailSvc.sendEmail(employee.getEmail(), "Your resource has been updated successfully",
+                "Hello " + employee.getFirstName() +
+                        "\n\nYour employee resource's (id = '" + employee.getId() + "') profile picture was uploaded successfully.\n\n" +
+                        "Have a nice day!\n\nAdmin"
+        );
+        return employee;
     }
 
     public DeleteRes delete(UUID id) throws BadRequestException, InternalServerErrorException {
@@ -75,13 +87,15 @@ public class EmployeeService {
         );
         try {
             employeeRp.delete(employee);
+            emailSvc.sendEmail(employee.getEmail(), "Your resource has been deleted successfully",
+                    "Hello " + employee.getFirstName() + "" +
+                            "\n\nYour employee resource deletion (id = '" + id + "') was performed successfully.\n\n" +
+                            "Have a nice day!\n\nAdmin"
+            );
         } catch (DataIntegrityViolationException e) {
-            if (e.getMessage().contains("fkmflbwgq59nl79en8rjs8tsd3g") ||
-                    (e.getMessage().contains("employees") && e.getMessage().contains("devices") && e.getMessage().contains("vincolo")))
-                throw new BadRequestException("employee you are trying to delete is referenced by one ore more devices," +
-                        " please delete all referencing devices before deleting employee; you can find all devices " +
-                        "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
-            throw new InternalServerErrorException("A non-specific factor causes a violation of data integrity. Cannot delete");
+            throw new BadRequestException("employee you are trying to delete is referenced by one ore more devices," +
+                    " please delete all referencing devices before deleting employee; you can find all devices " +
+                    "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
         }
         return new DeleteRes("employee with id='" + id + "' has been correctly deleted");
     }

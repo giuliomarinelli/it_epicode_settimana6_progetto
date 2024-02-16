@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+
 @Service
 public class DeviceService {
 
@@ -81,7 +82,16 @@ public class DeviceService {
             throw new BadRequestException("Malformed 'type' field, allowed exact-match values are SMARTPHONE, TABLET, LAPTOP, DOMOTIC_DEVICE," +
                     " DIGITAL_CAMERA, SMART_CARD, DESKTOP_COMPUTER, TV, OTHERS");
         }
-        return deviceRp.save(device);
+        deviceRp.save(device);
+        if (device.getEmployee() != null) {
+            emailSvc.sendEmail(device.getEmployee().getEmail(), "Your resource has been updated successfully",
+                    "Hello " + device.getEmployee().getFirstName() +
+                            "\n\nYour device resource (id = '" + device.getId() + "', type = '" + device.getType().toString() +
+                            "') was updated successfully.\n\n" +
+                            "Have a nice day!\n\nAdmin"
+            );
+        }
+        return device;
 
     }
 
@@ -95,13 +105,32 @@ public class DeviceService {
         device.setEmployee(employee);
         device.setEmployeeId(employeeId);
         device.setAssigned(true);
-        return deviceRp.save(device);
+        deviceRp.save(device);
+        if (device.getEmployee() != null) {
+            emailSvc.sendEmail(device.getEmployee().getEmail(), "A new device resource was assigned to your employee resource",
+                    "Hello " + device.getEmployee().getFirstName() +
+                            "\n\nA new device resource (id = '" + deviceId + "', type = '" + device.getType().toString() +
+                            "') was assigned to your employee resource (id = '" + employeeId + "').\n\n" +
+                            "Have a nice day!\n\nAdmin"
+            );
+        }
+        return device;
     }
 
     public DeleteRes delete(UUID id) throws BadRequestException {
         Device device = deviceRp.findById(id).orElseThrow(
                 () -> new BadRequestException("device with id='" + id + "' doesn't exist, cannot delete")
         );
+        deviceRp.delete(device);
+        if (device.getEmployee() != null) {
+            emailSvc.sendEmail(device.getEmployee().getEmail(), "Your device has been successfully deleted",
+                    "Hello " + device.getEmployee().getFirstName() +
+                            "\n\nYour device resource (id = '" + id +
+                            "') has been successfully deleted.\n" +
+                            "employee resource id = '" + device.getEmployee().getId() + "'.\n\n" +
+                            "Have a nice day!\n\nAdmin"
+            );
+        }
         return new DeleteRes("device with id='" + id + "' has been correctly deleted");
     }
 
