@@ -35,7 +35,11 @@ public class EmployeeService {
         try {
             return employeeRp.save(e);
         } catch (DataIntegrityViolationException exception) {
-            throw new BadRequestException("'email' field sent already exists. Cannot create");
+            if (exception.getMessage().contains("uk_j9xgmd0ya5jmus09o0b8pqrpb") || exception.getMessage().contains("email"))
+                throw new BadRequestException("'email' field sent already exists. Cannot create");
+            else if (exception.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || exception.getMessage().contains("email"))
+                throw new BadRequestException("'username' field sent already exists. Cannot create");
+            return null;
         }
     }
 
@@ -50,7 +54,11 @@ public class EmployeeService {
         try {
             return employeeRp.save(employee);
         } catch (DataIntegrityViolationException e) {
-            throw new BadRequestException("'email' field sent already exists. Cannot update");
+            if (e.getMessage().contains("uk_j9xgmd0ya5jmus09o0b8pqrpb") || e.getMessage().contains("email"))
+                throw new BadRequestException("'email' field sent already exists. Cannot update");
+            else if (e.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || e.getMessage().contains("email"))
+                throw new BadRequestException("'username' field sent already exists. Cannot update");
+            return null;
         }
     }
 
@@ -64,7 +72,7 @@ public class EmployeeService {
                 () -> new BadRequestException("employee with id='" + id + "' doesn't exist, cannot delete")
         );
         try {
-        employeeRp.delete(employee);
+            employeeRp.delete(employee);
         } catch (DataIntegrityViolationException e) {
             throw new BadRequestException("employee you are trying to delete is referenced by one ore more devices," +
                     " please delete all referencing devices before deleting employee; you can find all devices " +

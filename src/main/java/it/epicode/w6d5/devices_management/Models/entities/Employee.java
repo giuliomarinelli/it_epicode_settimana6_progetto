@@ -20,7 +20,7 @@ public class Employee {
     @Setter(AccessLevel.NONE)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String username;
 
     @Column(nullable = false)
@@ -29,7 +29,7 @@ public class Employee {
     @Column(nullable = false)
     private String lastName;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String profilePictureUrl;
