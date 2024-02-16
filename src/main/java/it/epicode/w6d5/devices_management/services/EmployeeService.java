@@ -4,6 +4,7 @@ import it.epicode.w6d5.devices_management.Models.entities.Employee;
 import it.epicode.w6d5.devices_management.Models.reqDTO.EmployeeDTO;
 import it.epicode.w6d5.devices_management.Models.resDTO.DeleteRes;
 import it.epicode.w6d5.devices_management.exceptions.BadRequestException;
+import it.epicode.w6d5.devices_management.exceptions.InternalServerErrorException;
 import it.epicode.w6d5.devices_management.exceptions.NotFoundException;
 import it.epicode.w6d5.devices_management.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepository employeeRp;
 
+
     public Page<Employee> getAll(Pageable pageable) {
         return employeeRp.findAll(pageable);
     }
@@ -30,20 +32,20 @@ public class EmployeeService {
         );
     }
 
-    public Employee create(EmployeeDTO employeeDTO) throws BadRequestException {
+    public Employee create(EmployeeDTO employeeDTO) throws BadRequestException, InternalServerErrorException {
         Employee e = new Employee(employeeDTO.username(), employeeDTO.firstName(), employeeDTO.lastName(), employeeDTO.email());
         try {
             return employeeRp.save(e);
         } catch (DataIntegrityViolationException exception) {
             if (exception.getMessage().contains("uk_j9xgmd0ya5jmus09o0b8pqrpb") || exception.getMessage().contains("email"))
                 throw new BadRequestException("'email' field sent already exists. Cannot create");
-            else if (exception.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || exception.getMessage().contains("email"))
+            else if (exception.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || exception.getMessage().contains("username"))
                 throw new BadRequestException("'username' field sent already exists. Cannot create");
-            return null;
+            throw new InternalServerErrorException("A non-specific factor causes a violation of data integrity. Cannot create");
         }
     }
 
-    public Employee update(EmployeeDTO employeeDTO, UUID id) throws BadRequestException {
+    public Employee update(EmployeeDTO employeeDTO, UUID id) throws BadRequestException, InternalServerErrorException {
         Employee employee = employeeRp.findById(id).orElseThrow(
                 () -> new BadRequestException("employee with id='" + id + "' doesn't exist. cannot update")
         );
@@ -56,9 +58,9 @@ public class EmployeeService {
         } catch (DataIntegrityViolationException e) {
             if (e.getMessage().contains("uk_j9xgmd0ya5jmus09o0b8pqrpb") || e.getMessage().contains("email"))
                 throw new BadRequestException("'email' field sent already exists. Cannot update");
-            else if (e.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || e.getMessage().contains("email"))
+            else if (e.getMessage().contains("uk_3gqbimdf7fckjbwt1kcud141m") || e.getMessage().contains("username"))
                 throw new BadRequestException("'username' field sent already exists. Cannot update");
-            return null;
+            throw new InternalServerErrorException("A non-specific factor causes a violation of data integrity. Cannot update");
         }
     }
 
@@ -67,16 +69,19 @@ public class EmployeeService {
         return employeeRp.save(employee);
     }
 
-    public DeleteRes delete(UUID id) throws BadRequestException {
+    public DeleteRes delete(UUID id) throws BadRequestException, InternalServerErrorException {
         Employee employee = employeeRp.findById(id).orElseThrow(
                 () -> new BadRequestException("employee with id='" + id + "' doesn't exist, cannot delete")
         );
         try {
             employeeRp.delete(employee);
         } catch (DataIntegrityViolationException e) {
-            throw new BadRequestException("employee you are trying to delete is referenced by one ore more devices," +
-                    " please delete all referencing devices before deleting employee; you can find all devices " +
-                    "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
+            if (e.getMessage().contains("fkmflbwgq59nl79en8rjs8tsd3g") ||
+                    (e.getMessage().contains("employees") && e.getMessage().contains("devices") && e.getMessage().contains("vincolo")))
+                throw new BadRequestException("employee you are trying to delete is referenced by one ore more devices," +
+                        " please delete all referencing devices before deleting employee; you can find all devices " +
+                        "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
+            throw new InternalServerErrorException("A non-specific factor causes a violation of data integrity. Cannot delete");
         }
         return new DeleteRes("employee with id='" + id + "' has been correctly deleted");
     }

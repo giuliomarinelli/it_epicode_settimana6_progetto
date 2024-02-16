@@ -5,6 +5,7 @@ import it.epicode.w6d5.devices_management.Models.entities.Employee;
 import it.epicode.w6d5.devices_management.Models.reqDTO.EmployeeDTO;
 import it.epicode.w6d5.devices_management.Models.resDTO.DeleteRes;
 import it.epicode.w6d5.devices_management.exceptions.BadRequestException;
+import it.epicode.w6d5.devices_management.exceptions.InternalServerErrorException;
 import it.epicode.w6d5.devices_management.exceptions.NotFoundException;
 import it.epicode.w6d5.devices_management.exceptions.ValidationMessages;
 import it.epicode.w6d5.devices_management.services.EmployeeService;
@@ -43,14 +44,14 @@ public class EmployeeController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/employees")
-    public Employee create(@RequestBody @Validated EmployeeDTO employeeDTO, BindingResult validation) throws BadRequestException {
+    public Employee create(@RequestBody @Validated EmployeeDTO employeeDTO, BindingResult validation) throws BadRequestException, InternalServerErrorException {
         if (validation.hasErrors())
             throw new BadRequestException(ValidationMessages.generateValidationErrorMessage(validation));
         return employeeSvc.create(employeeDTO);
     }
 
     @PutMapping("/employees/{id}")
-    public Employee update(@RequestBody @Validated EmployeeDTO employeeDTO, @PathVariable UUID id, BindingResult validation) throws BadRequestException {
+    public Employee update(@RequestBody @Validated EmployeeDTO employeeDTO, @PathVariable UUID id, BindingResult validation) throws BadRequestException, InternalServerErrorException {
         if (validation.hasErrors())
             throw new BadRequestException(ValidationMessages.generateValidationErrorMessage(validation));
         return employeeSvc.update(employeeDTO, id);
@@ -65,7 +66,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/employees/{id}")
-    public DeleteRes delete(@PathVariable UUID id) throws BadRequestException {
+    public DeleteRes delete(@PathVariable UUID id) throws BadRequestException, InternalServerErrorException {
         return employeeSvc.delete(id);
     }
 

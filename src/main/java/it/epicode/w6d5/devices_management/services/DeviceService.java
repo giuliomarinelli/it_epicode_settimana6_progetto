@@ -11,7 +11,6 @@ import it.epicode.w6d5.devices_management.exceptions.NotFoundException;
 import it.epicode.w6d5.devices_management.repositories.DeviceRepository;
 import it.epicode.w6d5.devices_management.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +24,9 @@ public class DeviceService {
 
     @Autowired
     private EmployeeRepository employeeRp;
+
+    @Autowired
+    private EmailService emailSvc;
 
 
     public Page<Device> getAll(Pageable pageable) {
