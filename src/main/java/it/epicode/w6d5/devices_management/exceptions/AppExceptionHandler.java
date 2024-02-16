@@ -29,6 +29,12 @@ public class AppExceptionHandler extends ResponseEntityExceptionHandler {
                 "Service unavailable", "An input/output error with Cloudinary provider occurred" +
                 " during file upload. " + e.getMessage()), HttpStatus.SERVICE_UNAVAILABLE);
     }
+
+    @ExceptionHandler(InternalServerErrorException.class)
+    public ResponseEntity<HttpErrorRes> internalServerErrorHandler(InternalServerErrorException e) {
+        return genericExceptionHandler(e);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<HttpErrorRes> genericExceptionHandler(Exception e) {
         return new ResponseEntity<>(new HttpErrorRes(HttpStatus.INTERNAL_SERVER_ERROR,

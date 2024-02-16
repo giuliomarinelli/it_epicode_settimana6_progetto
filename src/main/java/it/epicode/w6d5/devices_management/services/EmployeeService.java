@@ -4,6 +4,7 @@ import it.epicode.w6d5.devices_management.Models.entities.Employee;
 import it.epicode.w6d5.devices_management.Models.reqDTO.EmployeeDTO;
 import it.epicode.w6d5.devices_management.Models.resDTO.DeleteRes;
 import it.epicode.w6d5.devices_management.exceptions.BadRequestException;
+import it.epicode.w6d5.devices_management.exceptions.InternalServerErrorException;
 import it.epicode.w6d5.devices_management.exceptions.NotFoundException;
 import it.epicode.w6d5.devices_management.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class EmployeeService {
         );
     }
 
-    public Employee create(EmployeeDTO employeeDTO) throws Exception {
+    public Employee create(EmployeeDTO employeeDTO) throws BadRequestException, InternalServerErrorException {
         Employee e = new Employee(employeeDTO.username(), employeeDTO.firstName(), employeeDTO.lastName(), employeeDTO.email());
         try {
             employeeRp.save(e);
@@ -48,11 +49,11 @@ public class EmployeeService {
                 throw new BadRequestException("'email' field sent already exists. Cannot create");
             if (employeeRp.getAllUsernames().contains(e.getUsername()))
                 throw new BadRequestException("'username' field sent already exists. Cannot create");
-            throw new Exception("Data integrity violation. " + exception.getMessage());
+            throw new InternalServerErrorException("Data integrity violation. " + exception.getMessage());
         }
     }
 
-    public Employee update(EmployeeDTO employeeDTO, UUID id) throws BadRequestException {
+    public Employee update(EmployeeDTO employeeDTO, UUID id) throws BadRequestException, InternalServerErrorException {
         Employee employee = employeeRp.findById(id).orElseThrow(
                 () -> new BadRequestException("employee with id = '" + id + "' doesn't exist, cannot update")
         );
@@ -69,7 +70,11 @@ public class EmployeeService {
             );
             return employee;
         } catch (DataIntegrityViolationException e) {
-            throw new BadRequestException("'email' and/or 'username' fields sent already exist, cannot update");
+            if (employeeRp.getAllEmails().contains(employee.getEmail()))
+                throw new BadRequestException("'email' field sent already exists. Cannot create");
+            if (employeeRp.getAllUsernames().contains(employee.getUsername()))
+                throw new BadRequestException("'username' field sent already exists. Cannot create");
+            throw new InternalServerErrorException("Data integrity violation. " + e.getMessage());
         }
     }
 
@@ -84,7 +89,7 @@ public class EmployeeService {
         return employee;
     }
 
-    public DeleteRes delete(UUID id) throws BadRequestException {
+    public DeleteRes delete(UUID id) throws BadRequestException, InternalServerErrorException {
         Employee employee = employeeRp.findById(id).orElseThrow(
                 () -> new BadRequestException("employee with id = '" + id + "' doesn't exist, cannot delete")
         );
@@ -96,9 +101,11 @@ public class EmployeeService {
                             "Have a nice day!\n\nAdmin"
             );
         } catch (DataIntegrityViolationException e) {
-            throw new BadRequestException("employee you are trying to delete is referenced by one or more devices," +
-                    " please delete all referencing devices before deleting employee; you can find all devices " +
-                    "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
+            if (!employee.getDevices().isEmpty())
+                throw new BadRequestException("employee you are trying to delete is referenced by one or more devices," +
+                        " please delete all referencing devices before deleting employee; you can find all devices " +
+                        "assigned to an employee from '/devices?employeeId=<value for employee's id>'");
+            throw new InternalServerErrorException("Data integrity violation. " + e.getMessage());
         }
         return new DeleteRes("employee with id = '" + id + "' has been correctly deleted");
     }
